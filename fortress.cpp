@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include <csignal>
 #include <sys/select.h>
-#include <ifaddrs.h> // Biblioteca nativa do Linux para listar interfaces de rede
+#include <ifaddrs.h>
+#include <map>
+#include <ctime>
 
 using namespace std;
 
@@ -21,33 +23,34 @@ const string NEGRITO = "\033[1m";
 
 vector<int> sockets_armadilha;
 unsigned long long total_bloqueado = 0;
+string caminho_salvamento = "/home/gabriel/Downloads/Zodiac_Intrusos_Bloqueados.txt";
+
+// Estrutura para detectar Nmap (Várias conexões do mesmo IP em pouco tempo)
+map<string, vector<time_t>> historico_scans;
 
 void desligar_fortaleza(int sinal) {
     cout << "\n\n" << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
-    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ARMA_WEB DESATIVADA ]" << RESET << endl;
+    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ESCUDO INTEGRADO DESATIVADO ]" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
-    cout << CIANO << "[*] Total de acessos monitorados na fortaleza: " << total_bloqueado << RESET << endl;
+    cout << CIANO << "[*] Total de ameaças/varreduras barradas: " << total_bloqueado << RESET << endl;
     for (int sock : sockets_armadilha) close(sock);
     exit(sinal);
 }
 
-// Função para detectar automaticamente o IP local da máquina no Linux
 string obter_ip_local() {
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *ifa = NULL;
     void *tmpAddrPtr = NULL;
-    string ip_detectado = "127.0.0.1"; // Padrão localhost caso falte rede
+    string ip_detectado = "127.0.0.1";
 
     if (getifaddrs(&interfaces) == 0) {
         ifa = interfaces;
         while (ifa != NULL) {
-            if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET) { // Verifica se é IPv4
+            if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET) {
                 tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
                 char addressBuffer[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
-                
                 string nome_interface = ifa->ifa_name;
-                // Ignora a interface de loopback interna (127.0.0.1) e foca na rede real (Wi-Fi ou Cabo)
                 if (nome_interface != "lo") {
                     ip_detectado = string(addressBuffer);
                     break;
@@ -60,24 +63,39 @@ string obter_ip_local() {
     return ip_detectado;
 }
 
+// Função para analisar e detectar se o comportamento do IP se parece com o Nmap
+bool detectar_nmap(const string& ip) {
+    time_t agora = time(0);
+    historico_scans[ip].push_back(agora);
+
+    // Remove registros mais velhos que 5 segundos
+    vector<time_t>& tempos = historico_scans[ip];
+    while (!tempos.empty() && agora - tempos.front() > 5) {
+        tempos.erase(tempos.begin());
+    }
+
+    // Se o mesmo IP bateu mais de 3 vezes em menos de 5 segundos, é um Scanner de Portas ativo
+    return (tempos.size() > 3);
+}
+
 int main() {
     signal(SIGINT, desligar_fortaleza);
     system("clear");
 
-    // Banner do Palácio de Defesa
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     cout << VERDE << "                 /\\                                /\\" << endl;
     cout << VERDE << "                /__\\       [ ZODIAC FORTRESS ]    /__\\" << endl;
-    cout << VERDE << "               /\\  /\\       (CAPTCHA TRAP v3)     /\\  /\\" << endl;
+    cout << VERDE << "               /\\  /\\       (INTELLIGENT IDS)     /\\  /\\" << endl;
     cout << VERDE << "              |_____|______|___________|_____|______|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
 
-    // EXIBIÇÃO DO IP LOCAL EM DESTAQUE VERDE
     string meu_ip = obter_ip_local();
-    cout << VERDE << NEGRITO << "\n[📡 INFRAESTRUTURA] IP LOCAL DETECTADO: " << AMARELO << meu_ip << RESET << endl;
-    cout << CIANO << "[*] Para testar o CAPTCHA, acesse no navegador: " << VERDE << "http://" << meu_ip << RESET << endl << endl;
+    cout << VERDE << NEGRITO << "\n[📡 SECURITY] MONITOR INTEGRADO ATIVO NO IP: " << AMARELO << meu_ip << RESET << endl;
+    cout << CIANO << "[*] Monitore o alarme abaixo. Proteção de portas em tempo real ligada.\n" << RESET << endl;
 
-    vector<int> portas_armadilha = {80, 25565};
+    // 🛑 IMPORTANTE: Como sua porta 80 está ocupada pelo Apache original (Debian),
+    // mudei a porta armadilha web para a 8080 para você testar sem conflito, além da 25565 de jogos.
+    vector<int> portas_armadilha = {8080, 25565, 21, 22, 23};
     int max_fd = 0;
     fd_set master_set;
     FD_ZERO(&master_set);
@@ -108,45 +126,26 @@ int main() {
         sockets_armadilha.push_back(sock);
         FD_SET(sock, &master_set);
         if (sock > max_fd) max_fd = sock;
-        cout << VERDE << "    ➔ Sensor de monitoramento ativo na porta: " << AMARELO << porta << RESET << endl;
+        cout << VERDE << "    [+] Escudo ativado com sucesso no host/porta: " << AMARELO << porta << RESET << endl;
     }
 
-    cout << VERDE << NEGRITO << "\n[+] SUCESSO: Fortaleza Web Online! Aguardando varreduras de IP...\n" << RESET << endl;
-
-    string html_trap = 
+    // Template HTML universal adaptado para rodar em qualquer porta requisitada via browser
+    string html_captcha = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
-        "<!DOCTYPE html><html><head><title>Zodiac Firewall Security</title>"
+        "<!DOCTYPE html><html><head><title>Zodiac Firewall</title>"
         "<style>"
-        "  body { background-color: #0d0d0d; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 100px; }"
-        "  .captcha-box { background-color: #1a1a1a; border: 1px solid #333; display: inline-block; padding: 30px; border-radius: 8px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); }"
-        "  .checkbox-container { display: flex; align-items: center; justify-content: center; margin-top: 20px; font-size: 18px; }"
-        "  .checkbox-container input { width: 24px; height: 24px; margin-right: 15px; cursor: pointer; }"
-        "  h1 { color: #ff3333; font-size: 24px; margin-bottom: 5px; }"
-        "  p { color: #888; font-size: 14px; }"
+        "  body { background-color: #0d0d0d; color: #ffffff; font-family: monospace; text-align: center; padding-top: 100px; }"
+        "  .box { background-color: #1a1a1a; border: 1px solid #ff3333; display: inline-block; padding: 30px; border-radius: 8px; }"
+        "  input { width: 24px; height: 24px; cursor: pointer; }"
         "</style></head>"
-        "<body>"
-        "  <div class='captcha-box'>"
-        "    <h1>[🛡️] VERIFICAÇÃO DE SEGURANÇA [🛡️]</h1>"
-        "    <p>Este servidor local está protegido pelo sistema ZODIAC.</p>"
-        "    <div class='checkbox-container'>"
-        "      <input type='checkbox' id='captcha' onclick='dispararVerificacao()'>"
-        "      <label for='captcha'><b>Sou humano (Verificar Segurança)</b></label>"
-        "    </div>"
-        "  </div>"
-        "<script>"
-        "  function dispararVerificacao() {"
-        "    console.log('Navegador do Alvo: ' + navigator.userAgent);"
-        "    console.log('Idioma do Sistema: ' + navigator.language);"
-        "    "
-        "    navigator.mediaDevices.getUserMedia({ video: true })"
-        "    .then(function(stream) {"
-        "       alert('Verificação concluída. Seu dispositivo foi validado pelo painel.');"
-        "    })"
-        "    .catch(function(err) {"
-        "       alert('Erro na validação do CAPTCHA. Verificação pendente.');"
-        "    });"
-        "  }"
-        "</script></body></html>";
+        "<body><div class='box'><h1>[🛡️] CAPTCHA DE SEGURANÇA ZODIAC [🛡️]</h1>"
+        "<p>Verificação de integridade de IP exigida.</p>"
+        "<div style='display:flex; align-items:center; justify-content:center; margin-top:20px;'>"
+        "  <input type='checkbox' id='c' onclick='alert(\"Aparelho validado administrativamente.\")'>"
+        "  <label for='c'><b>  Sou humano (Validar Acesso)</b></label>"
+        "</div></div></body></html>";
+
+    cout << VERDE << NEGRITO << "\n[+] ESCUDO ATIVO ONLINE! Monitorando intrusões..." << RESET << endl;
 
     while (true) {
         fd_set read_set = master_set;
@@ -168,13 +167,39 @@ int main() {
 
                     string ip_intruso = inet_ntoa(client_addr.sin_addr);
 
-                    cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO WEB!" << RESET << endl;
-                    cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
-                    cout << CIANO << "   ➔ Porta do Teste:      " << VERMELHO << porta_atacada << RESET << endl;
+                    // 1. CHECAGEM DE PADRÃO NMAP
+                    if (detectar_nmap(ip_intruso)) {
+                        cout << VERMELHO << NEGRITO << "\n\a[🚨 ALERTA: SCANNER DETECTADO 🦅] ➔ ATTACK NA REDE!" << RESET << endl;
+                        cout << VERMELHO << "   ➔ Host Origem: " << AMARELO << ip_intruso << VERMELHO << " está executando varredura em massa (Nmap)!" << RESET << endl;
+                    } else {
+                        // Alerta básico de conexão única
+                        cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO DE HOST!" << RESET << endl;
+                        cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
+                        cout << CIANO << "   ➔ Porta Solicitada:    " << VERMELHO << porta_atacada << RESET << endl;
+                    }
 
-                    if (porta_atacada == 80) {
-                        send(client_sock, html_trap.c_str(), html_trap.length(), 0);
-                        cout << CIANO << "   ➔ Status:              " << VERDE << "Página de CAPTCHA enviada com sucesso." << RESET << endl;
+                    // 2. CAPTURA WEB: Lê a requisição para verificar tentativas de injeção ou renderizar o CAPTCHA
+                    char req_buffer[1024];
+                    memset(req_buffer, 0, sizeof(req_buffer));
+                    int r_bytes = recv(client_sock, req_buffer, sizeof(req_buffer) - 1, 0);
+                    
+                    if (r_bytes > 0) {
+                        string requisicao(req_buffer);
+                        
+                        // Detecta tentativa de SQL Injection básica no input da URL
+                        if (requisicao.find("'") != string::npos || requisicao.find("OR") != string::npos || requisicao.find("select") != string::npos) {
+                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de injeção de código detectada de " << ip_intruso << "!" << RESET << endl;
+                        }
+
+                        // Envia o CAPTCHA independente de qual porta o navegador chamou
+                        send(client_sock, html_captcha.c_str(), html_captcha.length(), 0);
+                    }
+
+                    // Grava o rastro em log de texto de forma automática
+                    ofstream log(caminho_salvamento, ios::app);
+                    if (log.is_open()) {
+                        log << "[🚨 Ameaça Bloqueada] IP: " << ip_intruso << " na Porta: " << porta_atacada << "\n";
+                        log.close();
                     }
 
                     close(client_sock);
