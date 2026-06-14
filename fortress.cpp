@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream> // CORREÇÃO: Adicionado para permitir o funcionamento do ofstream log
 #include <vector>
 #include <string>
 #include <cstring>
@@ -93,8 +94,7 @@ int main() {
     cout << VERDE << NEGRITO << "\n[📡 SECURITY] MONITOR INTEGRADO ATIVO NO IP: " << AMARELO << meu_ip << RESET << endl;
     cout << CIANO << "[*] Monitore o alarme abaixo. Proteção de portas em tempo real ligada.\n" << RESET << endl;
 
-    // 🛑 IMPORTANTE: Como sua porta 80 está ocupada pelo Apache original (Debian),
-    // mudei a porta armadilha web para a 8080 para você testar sem conflito, além da 25565 de jogos.
+    // Escuta nas principais portas de monitoramento (8080 para não conflitar com seu Apache Debian padrão)
     vector<int> portas_armadilha = {8080, 25565, 21, 22, 23};
     int max_fd = 0;
     fd_set master_set;
@@ -129,7 +129,7 @@ int main() {
         cout << VERDE << "    [+] Escudo ativado com sucesso no host/porta: " << AMARELO << porta << RESET << endl;
     }
 
-    // Template HTML universal adaptado para rodar em qualquer porta requisitada via browser
+    // Template HTML do CAPTCHA ZODIAC
     string html_captcha = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
         "<!DOCTYPE html><html><head><title>Zodiac Firewall</title>"
@@ -167,35 +167,33 @@ int main() {
 
                     string ip_intruso = inet_ntoa(client_addr.sin_addr);
 
-                    // 1. CHECAGEM DE PADRÃO NMAP
+                    // 1. CHECAGEM DE SCANNER REAL (NMAP)
                     if (detectar_nmap(ip_intruso)) {
                         cout << VERMELHO << NEGRITO << "\n\a[🚨 ALERTA: SCANNER DETECTADO 🦅] ➔ ATTACK NA REDE!" << RESET << endl;
                         cout << VERMELHO << "   ➔ Host Origem: " << AMARELO << ip_intruso << VERMELHO << " está executando varredura em massa (Nmap)!" << RESET << endl;
                     } else {
-                        // Alerta básico de conexão única
                         cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO DE HOST!" << RESET << endl;
                         cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
                         cout << CIANO << "   ➔ Porta Solicitada:    " << VERMELHO << porta_atacada << RESET << endl;
                     }
 
-                    // 2. CAPTURA WEB: Lê a requisição para verificar tentativas de injeção ou renderizar o CAPTCHA
-                    char req_buffer[1024];
+                    // 2. CAPTURA E ANÁLISE DE EXPLOIT WEB (SQL/Injeção)
+                    char req_buffer[2048];
                     memset(req_buffer, 0, sizeof(req_buffer));
                     int r_bytes = recv(client_sock, req_buffer, sizeof(req_buffer) - 1, 0);
                     
                     if (r_bytes > 0) {
                         string requisicao(req_buffer);
                         
-                        // Detecta tentativa de SQL Injection básica no input da URL
                         if (requisicao.find("'") != string::npos || requisicao.find("OR") != string::npos || requisicao.find("select") != string::npos) {
-                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de injeção de código detectada de " << ip_intruso << "!" << RESET << endl;
+                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de injeção de código (SQL) detectada de " << ip_intruso << "!" << RESET << endl;
                         }
 
-                        // Envia o CAPTCHA independente de qual porta o navegador chamou
+                        // Entrega o CAPTCHA via Socket de volta para o Navegador do alvo
                         send(client_sock, html_captcha.c_str(), html_captcha.length(), 0);
                     }
 
-                    // Grava o rastro em log de texto de forma automática
+                    // 3. SALVAMENTO AUTOMÁTICO EM LOG NO DISCO
                     ofstream log(caminho_salvamento, ios::app);
                     if (log.is_open()) {
                         log << "[🚨 Ameaça Bloqueada] IP: " << ip_intruso << " na Porta: " << porta_atacada << "\n";
