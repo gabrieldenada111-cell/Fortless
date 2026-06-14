@@ -1,5 +1,5 @@
 #include <iostream>
-#include <fstream> // CORREÇÃO: Adicionado para permitir o funcionamento do ofstream log
+#include <fstream>
 #include <vector>
 #include <string>
 #include <cstring>
@@ -26,14 +26,12 @@ vector<int> sockets_armadilha;
 unsigned long long total_bloqueado = 0;
 string caminho_salvamento = "/home/gabriel/Downloads/Zodiac_Intrusos_Bloqueados.txt";
 
-// Estrutura para detectar Nmap (Várias conexões do mesmo IP em pouco tempo)
 map<string, vector<time_t>> historico_scans;
 
 void desligar_fortaleza(int sinal) {
     cout << "\n\n" << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
-    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ESCUDO INTEGRADO DESATIVADO ]" << RESET << endl;
+    cout << AMARELO << NEGRITO << "             [ ZODIAC FORTRESS - ARMA WEB CLOUDFLARE DESATIVADA ]" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
-    cout << CIANO << "[*] Total de ameaças/varreduras barradas: " << total_bloqueado << RESET << endl;
     for (int sock : sockets_armadilha) close(sock);
     exit(sinal);
 }
@@ -64,18 +62,13 @@ string obter_ip_local() {
     return ip_detectado;
 }
 
-// Função para analisar e detectar se o comportamento do IP se parece com o Nmap
 bool detectar_nmap(const string& ip) {
     time_t agora = time(0);
     historico_scans[ip].push_back(agora);
-
-    // Remove registros mais velhos que 5 segundos
     vector<time_t>& tempos = historico_scans[ip];
     while (!tempos.empty() && agora - tempos.front() > 5) {
         tempos.erase(tempos.begin());
     }
-
-    // Se o mesmo IP bateu mais de 3 vezes em menos de 5 segundos, é um Scanner de Portas ativo
     return (tempos.size() > 3);
 }
 
@@ -86,16 +79,15 @@ int main() {
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
     cout << VERDE << "                 /\\                                /\\" << endl;
     cout << VERDE << "                /__\\       [ ZODIAC FORTRESS ]    /__\\" << endl;
-    cout << VERDE << "               /\\  /\\       (INTELLIGENT IDS)     /\\  /\\" << endl;
+    cout << VERDE << "               /\\  /\\       (CLOUDFLARE TRAP)     /\\  /\\" << endl;
     cout << VERDE << "              |_____|______|___________|_____|______|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
 
     string meu_ip = obter_ip_local();
-    cout << VERDE << NEGRITO << "\n[📡 SECURITY] MONITOR INTEGRADO ATIVO NO IP: " << AMARELO << meu_ip << RESET << endl;
-    cout << CIANO << "[*] Monitore o alarme abaixo. Proteção de portas em tempo real ligada.\n" << RESET << endl;
+    cout << VERDE << NEGRITO << "\n[📡 SECURITY] MONITOR CLOUDFLARE ATIVO NO HOST: " << AMARELO << meu_ip << RESET << endl;
 
-    // Escuta nas principais portas de monitoramento (8080 para não conflitar com seu Apache Debian padrão)
-    vector<int> portas_armadilha = {8080, 25565, 21, 22, 23};
+    // Monitorando a porta 8080 (Livre para testes web no Firefox) e a 25565 de jogos
+    vector<int> portas_armadilha = {8080, 25565};
     int max_fd = 0;
     fd_set master_set;
     FD_ZERO(&master_set);
@@ -126,26 +118,47 @@ int main() {
         sockets_armadilha.push_back(sock);
         FD_SET(sock, &master_set);
         if (sock > max_fd) max_fd = sock;
-        cout << VERDE << "    [+] Escudo ativado com sucesso no host/porta: " << AMARELO << porta << RESET << endl;
+        cout << VERDE << "    [+] Escudo ativado na porta local: " << AMARELO << porta << RESET << endl;
     }
 
-    // Template HTML do CAPTCHA ZODIAC
-    string html_captcha = 
+    // Template HTML customizado com o Design oficial da página de validação Cloudflare
+    string html_cloudflare = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
-        "<!DOCTYPE html><html><head><title>Zodiac Firewall</title>"
+        "<!DOCTYPE html><html><head><title>Just a moment...</title>"
         "<style>"
-        "  body { background-color: #0d0d0d; color: #ffffff; font-family: monospace; text-align: center; padding-top: 100px; }"
-        "  .box { background-color: #1a1a1a; border: 1px solid #ff3333; display: inline-block; padding: 30px; border-radius: 8px; }"
-        "  input { width: 24px; height: 24px; cursor: pointer; }"
+        "  body { background-color: #f3f3f3; color: #313131; font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding-top: 80px; text-align: left; padding-left: 15%; padding-right: 15%; }"
+        "  @media (prefers-color-scheme: dark) { body { background-color: #1c1b1b; color: #d9d9d9; } }"
+        "  .cf-wrapper { max-width: 1000px; margin: 0 auto; }"
+        "  h1 { font-size: 32px; font-weight: 500; margin-bottom: 10px; color: #f38020; }"
+        "  .cf-captcha-container { background-color: #ffffff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 4px; display: inline-block; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }"
+        "  @media (prefers-color-scheme: dark) { .cf-captcha-container { background-color: #2b2a2a; border-color: #403f3f; } }"
+        "  .checkbox-container { display: flex; align-items: center; font-size: 16px; color: #313131; }"
+        "  @media (prefers-color-scheme: dark) { .checkbox-container { color: #d9d9d9; } }"
+        "  input[type='checkbox'] { width: 28px; height: 28px; margin-right: 14px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }"
+        "  .footer { margin-top: 60px; font-size: 12px; color: #9c9c9c; border-top: 1px solid #e0e0e0; padding-top: 15px; display: flex; align-items: center; }"
+        "  @media (prefers-color-scheme: dark) { .footer { border-top-color: #403f3f; } }"
+        "  .cf-logo { background-image: url('https://wikimedia.org'); background-size: contain; background-repeat: no-repeat; width: 100px; height: 30px; margin-right: 15px; }"
         "</style></head>"
-        "<body><div class='box'><h1>[🛡️] CAPTCHA DE SEGURANÇA ZODIAC [🛡️]</h1>"
-        "<p>Verificação de integridade de IP exigida.</p>"
-        "<div style='display:flex; align-items:center; justify-content:center; margin-top:20px;'>"
-        "  <input type='checkbox' id='c' onclick='alert(\"Aparelho validado administrativamente.\")'>"
-        "  <label for='c'><b>  Sou humano (Validar Acesso)</b></label>"
-        "</div></div></body></html>";
+        "<body>"
+        "  <div class='cf-wrapper'>"
+        "    <h1>Checking if the site connection is secure</h1>"
+        "    <p style='font-size:18px; color:#858585;'>Validating your browser session via Cloudflare node. Please wait...</p>"
+        "    "
+        "    <div class='cf-captcha-container'>"
+        "      <div class='checkbox-container'>"
+        "        <input type='checkbox' id='cf-check' onclick='alert(\"Success: Browser verified by Cloudflare WAF.\")'>"
+        "        <label for='cf-check'><b>Verify you are human</b></label>"
+        "      </div>"
+        "    </div>"
+        "    "
+        "    <div class='footer'>"
+        "      <div class='cf-logo'></div>"
+        "      <div>Performance & security by Cloudflare. Ray ID: " + to_string(time(0)) + "</div>"
+        "    </div>"
+        "  </div>"
+        "</body></html>";
 
-    cout << VERDE << NEGRITO << "\n[+] ESCUDO ATIVO ONLINE! Monitorando intrusões..." << RESET << endl;
+    cout << VERDE << NEGRITO << "\n[+] ESCUDO ATIVO ONLINE! Monitorando intrusões locais..." << RESET << endl;
 
     while (true) {
         fd_set read_set = master_set;
@@ -167,39 +180,35 @@ int main() {
 
                     string ip_intruso = inet_ntoa(client_addr.sin_addr);
 
-                    // 1. CHECAGEM DE SCANNER REAL (NMAP)
                     if (detectar_nmap(ip_intruso)) {
                         cout << VERMELHO << NEGRITO << "\n\a[🚨 ALERTA: SCANNER DETECTADO 🦅] ➔ ATTACK NA REDE!" << RESET << endl;
-                        cout << VERMELHO << "   ➔ Host Origem: " << AMARELO << ip_intruso << VERMELHO << " está executando varredura em massa (Nmap)!" << RESET << endl;
+                        cout << VERMELHO << "   ➔ Host Origem: " << AMARELO << ip_intruso << VERMELHO << " esta executando varredura automatizada!" << RESET << endl;
                     } else {
                         cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO DE HOST!" << RESET << endl;
                         cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
                         cout << CIANO << "   ➔ Porta Solicitada:    " << VERMELHO << porta_atacada << RESET << endl;
                     }
 
-                    // 2. CAPTURA E ANÁLISE DE EXPLOIT WEB (SQL/Injeção)
-                    char req_buffer[2048];
+                    char req_buffer[1024];
                     memset(req_buffer, 0, sizeof(req_buffer));
                     int r_bytes = recv(client_sock, req_buffer, sizeof(req_buffer) - 1, 0);
                     
                     if (r_bytes > 0) {
                         string requisicao(req_buffer);
                         
-                        if (requisicao.find("'") != string::npos || requisicao.find("OR") != string::npos || requisicao.find("select") != string::npos) {
-                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de injeção de código (SQL) detectada de " << ip_intruso << "!" << RESET << endl;
+                        if (requisicao.find("'") != string::npos || requisicao.find("OR") != string::npos) {
+                            cout << VERMELHO << NEGRITO << "   [🔥 ALERTA DE EXPLOIT] ➔ Tentativa de comando SQL detectada de " << ip_intruso << "!" << RESET << endl;
                         }
 
-                        // Entrega o CAPTCHA via Socket de volta para o Navegador do alvo
-                        send(client_sock, html_captcha.c_str(), html_captcha.length(), 0);
+                        // Envia a página Cloudflare estilizada de volta para o Firefox
+                        send(client_sock, html_cloudflare.c_str(), html_cloudflare.length(), 0);
                     }
 
-                    // 3. SALVAMENTO AUTOMÁTICO EM LOG NO DISCO
                     ofstream log(caminho_salvamento, ios::app);
                     if (log.is_open()) {
-                        log << "[🚨 Ameaça Bloqueada] IP: " << ip_intruso << " na Porta: " << porta_atacada << "\n";
-                        log.close();
-                    }
-
+                        log << "[🚨 Ameaça Monitorada] IP: " << ip_intruso << " na Porta: " << porta_atacada << "\n";
+log.close(); 
+        }
                     close(client_sock);
                 }
             }
